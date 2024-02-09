@@ -1,0 +1,12 @@
+footer {
+    background-color: #f9f9f9;
+}
+
+.footer__links {
+    border-bottom: 2px solid var(--primaryColor);
+}
+
+.footer__copyright {
+    font-weight: 800;
+    font-size: 13px;
+}
