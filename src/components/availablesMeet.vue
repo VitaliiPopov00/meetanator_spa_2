@@ -22,7 +22,8 @@
                     v-for="user, login in meet.availables"
                 >
                     <th class="d-f ai-c p-s l-0 bc-w fw-s py-10 pr-20 ta-l">
-                        <p>{{ login }}
+                        <p>
+                            {{ login }}
                             <span 
                                 v-if="user.id == meet.leader.id"
                                 class="mark mark-info ml-5"

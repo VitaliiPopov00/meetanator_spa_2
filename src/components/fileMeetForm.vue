@@ -13,6 +13,7 @@
                         <span>Выберите изображение</span>
                         <br>
                         <input
+                            @change="fileChange"
                             ref="img"
                             type="file" 
                             name="file" 
@@ -35,6 +36,7 @@
                         <span>Выберите pdf (до 2-х файлов)</span>
                         <br>
                         <input
+                            @change="fileChange"
                             ref="files"
                             type="file" 
                             name="file1" 
@@ -67,6 +69,7 @@ export default {
     data() {
         return {
             error: {},
+            isSelected: false,
         }
     },
     methods: {
@@ -97,8 +100,8 @@ export default {
             if (attributeName) {
                 this.errors[`${attributeName}`] = '';
             } else {
-                for (let error in this.errors) {
-                    this.errors[error] = '';
+                for (let error in this.error) {
+                    this.error[error] = '';
                 }
             }
         },
@@ -114,6 +117,17 @@ export default {
 
             return data;
         },
+        fileChange(event) {
+            this.isSelected = Boolean(event.target.files.length);
+
+            let fileName = [];
+
+            for (let i = 0; i < event.target.files.length; i++) {
+                fileName.push(event.target.files[i].name);
+            }
+
+            event.target.parentElement.querySelector('span').textContent = `Выбрано: ${fileName.join(', ')}`;
+        }
         
     }
 }

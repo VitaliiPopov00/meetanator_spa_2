@@ -89,6 +89,7 @@
 
                     if (response.status > 199 && response.status < 301) {
                         localStorage.setItem('token', data.data.token);
+                        this.$router.push('/profile');
                     } else {
                         throw Error(JSON.stringify(data.error));
                     }

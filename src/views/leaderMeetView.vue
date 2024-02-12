@@ -82,42 +82,26 @@
                     @update="fetchGetMeetInfo"
                 />
 
-                <section class="mb-50">
-                    <h3 class="mb-15 fs-m">
-                        Отправьте приглашение новым участникам встречи
-                    </h3>
-            
-                    <form class="d-f fd-c g-30">
-                        <div class="d-f ai-c g-10">
-                            <div>
-                                <input 
-                                    type="email" 
-                                    name="email" 
-                                    class="form-control" 
-                                    placeholder="Введите email участника"
-                                />
-                                <p class="valid__feedback">Пример успеха</p>
-                                <p 
-                                    class="invalid__feedback" 
-                                >Пример ошибки</p>
-                            </div>
-                            <div class="d-f g-10">
-                                <p class="h-p">➖</p>
-                                <p class="h-p">➕</p>
-                            </div>
-                        </div>
-            
-                        <input 
-                            type="submit" 
-                            value="Отправить" 
-                            class="btn btn-primary" 
-                        />
-                    </form>
-                </section>
+                <invite-form />
 
-                <div class="mb-25">
-                    <a href="#" class="btn btn-danger">Заблокировать встречу </a>
+                <div 
+                    v-if="!meet.block"
+                    class="mb-25"
+                >
+                    <a 
+                        @click="fetchBlockMeet"
+                        href="#" 
+                        class="btn btn-danger"
+                    >Заблокировать встречу </a>
                 </div>
+            </div>
+        </section>
+        <section
+            v-else-if="error"
+        >
+            <div class="container mt-10 py-10 bg-white br-10">
+                <h3 class="heading__text mb-25 ta-c">{{ error.code }}</h3>
+                <h3 class="heading__text mb-25 ta-c">{{ error.message }}</h3>
             </div>
         </section>
     </main>
@@ -126,6 +110,8 @@
 
 <script>
 import fileMeetForm from '@/components/fileMeetForm.vue';
+import inviteForm from '@/components/inviteForm.vue';
+
 export default {
     data() {
         return {
@@ -136,6 +122,7 @@ export default {
     },
     components: {
         fileMeetForm,
+        inviteForm,
     },
     methods: {
         getHost() {
@@ -175,6 +162,24 @@ export default {
                     throw Error(JSON.stringify(data.error));
                 }
             } catch (e) {
+                this.error = JSON.parse(e.message);
+            }
+        },
+        async fetchBlockMeet() {
+            try {
+                let requestOptions = {
+                    method: 'DELETE',
+                }
+
+                let response = await fetch(`${localStorage.homeUrlAPI}/api/meet/${this.$route.params.hash}/${this.$route.params.hashLeader}`, requestOptions);
+                
+                if (response.status > 199 && response.status < 300) {
+                    this.fetchGetMeetInfo();
+                } else {
+                    let data = await response.json();
+                    throw Error(JSON.stringify(data.error));
+                }
+            } catch(e) {
                 this.error = JSON.parse(e.message);
             }
         }
