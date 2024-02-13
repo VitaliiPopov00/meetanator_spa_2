@@ -80,9 +80,9 @@
                                 :min="getDate(Date.now())"
                                 :max="getDate(getFutureDate(Date.now(), 30))"
                                 :class="{ 'is-invalid': error[`date${index}`] }"
+                                :id="date${index}"
+                                :name="date${index}" 
                                 class="form-control" 
-                                id="date"
-                                name="date1" 
                                 type="date" 
                             />
                             <p class="valid__feedback">Пример успеха</p>
@@ -234,7 +234,7 @@ export default {
                     }
                 }
 
-                let response = await fetch(`${localStorage.getItem('homeUrlAPI')}/api/meet`, requestOptions);
+                let response = await fetch(`${localStorage.homeUrlAPI}/api/meet`, requestOptions);
                 let data = await response.json();
 
                 if (response.status > 199 && response.status < 301) {

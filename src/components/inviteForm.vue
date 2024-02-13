@@ -42,6 +42,7 @@
 
             <input 
                 @click.prevent="fetchSendInvite" 
+                :class="{ 'not-available': emails.length == 1 && emails[0] == '' }"
                 type="submit" 
                 value="Отправить" 
                 class="btn btn-primary" 

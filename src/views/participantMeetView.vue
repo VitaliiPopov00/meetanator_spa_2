@@ -55,12 +55,11 @@
                         method: 'GET',
                     }
         
-                    let response = await fetch(`${localStorage.getItem('homeUrlAPI')}/api/meet/${this.$route.params.hash}`, requestOptions);
+                    let response = await fetch(`${localStorage.homeUrlAPI}/api/meet/${this.$route.params.hash}`, requestOptions);
                     let data = await response.json();
         
                     if (response.status > 199 && response.status < 301) {
                         this.meet = data.data.meet;
-                        this.userID = this.meet.leader.id;
                     } else {
                         throw Error(JSON.stringify(data.error));
                     }
@@ -71,7 +70,7 @@
         },
         computed: {
             meetImg() {
-                return this.meet ? `url('${localStorage.getItem('homeUrlAPI')}/api/img/${this.$route.params.hash}/${this.meet.img}')` : '';
+                return this.meet ? `url('${localStorage.homeUrlAPI}/api/img/${this.$route.params.hash}/${this.meet.img}')` : '';
             }
         },
         mounted() {
@@ -81,5 +80,14 @@
 </script>
 
 <style scoped>
+    .page-enter-active,
+    .page-leave-active {
+        transition: all 0.5s ease;
+    }
 
+    .page-enter-from,
+    .page-leave-to {
+        transform: translateY(20px);
+        opacity: 0;
+    }
 </style>

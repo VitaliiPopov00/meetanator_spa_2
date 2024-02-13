@@ -47,7 +47,7 @@
                         </a>
                     </th>
                     <td
-                        v-if="userID != user.id || meet.block"
+                        v-if="userID != user.id || meet.block || onlyView"
                         v-for="available in user.availables[indexDay]"
                         :class="{ meet__active : available, meet__disactive: !available }"
                         class="bg-d ta-c p-r"
@@ -57,7 +57,7 @@
                         </div>
                     </td>
                     <td
-                        v-else-if="!onlyView && !meet.block"
+                        v-else-if="userID == user.id && !onlyView && !meet.block"
                         v-for="available, indexTime in user.availables[indexDay]"
                         @click="updateUserInterval(login, indexDay, indexTime, !available)"
                         :class="{ available : available }"
@@ -82,7 +82,6 @@
                     >
                         {{ count }}
                     </td>
-                    
                 </tr>
             </table>
         </li>
@@ -105,11 +104,6 @@ export default {
             type: Boolean,
             required: false,
             default: false,
-        }
-    },
-    data() {
-        return {
-
         }
     },
     methods: {
@@ -140,9 +134,6 @@ export default {
             }
 
             return resultTime;
-        },
-        getUniqueIDForInterval(indexDay, indexTime) {
-            return `_${indexDay}_${indexTime}`;
         },
         getAllAvailablesInInterval(indexDay) {
             let result = [];

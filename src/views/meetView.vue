@@ -101,5 +101,14 @@
 </script>
 
 <style scoped>
+    .page-enter-active,
+    .page-leave-active {
+        transition: all 0.5s ease;
+    }
 
+    .page-enter-from,
+    .page-leave-to {
+        transform: translateY(20px);
+        opacity: 0;
+    }
 </style>

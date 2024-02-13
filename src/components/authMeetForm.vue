@@ -59,6 +59,7 @@
             async fetchLogin() {
                 try {
                     this.clearError();
+                    
                     let requestOptions = {
                         method: 'POST',
                         body: JSON.stringify(this.data),

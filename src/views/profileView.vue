@@ -2,15 +2,21 @@
     <main>
         <div class="container mt-50">
             <h3 class="heading__text mb-20">Личный кабинет</h3>
-            <h3 class="fs-m mb-15">Ваши встречи</h3>
-            <leader-meet-list 
-                :meets="meets" 
-                @update="fetchLeaderInfo"
-            />
+            <transition name="page">
+                <div
+                    v-if="meets.length"
+                >
+                    <h3 class="fs-m mb-15">Ваши встречи</h3>
+                    <leader-meet-list 
+                        :meets="meets" 
+                        @update="fetchLeaderInfo"
+                    />
+                </div>
+            </transition>
             <a 
-                @click="fetchLogout"
-                href="#" 
-                class="btn btn-primary" 
+                        @click="fetchLogout"
+                        href="#" 
+                        class="btn btn-primary" 
             >Выход</a>
         </div>
     </main>
@@ -82,5 +88,14 @@
 </script>
 
 <style scoped>
+    .page-enter-active,
+    .page-leave-active {
+        transition: all 0.5s ease;
+    }
 
+    .page-enter-from,
+    .page-leave-to {
+        transform: translateY(20px);
+        opacity: 0;
+    }
 </style>

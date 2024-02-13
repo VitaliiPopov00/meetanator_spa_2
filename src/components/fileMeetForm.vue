@@ -55,6 +55,7 @@
             </div>
             <input 
                 @click.prevent="fetchUpdateMeetFile"
+                :class="{ 'not-available': !isSelected }"
                 type="submit" 
                 value="Сохранить" 
                 class="btn btn-primary" 
@@ -94,6 +95,8 @@ export default {
             } catch (e) {
                 let error = JSON.parse(e.message);
                 this.error = error.errors;
+            } finally {
+                this.clearFile();
             }
         },
         clearError(attributeName) {
@@ -104,6 +107,12 @@ export default {
                     this.error[error] = '';
                 }
             }
+        },
+        clearFile() {
+            this.$refs.img.value = '';
+            this.$refs.files.value = '';
+            this.$refs.img.parentElement.querySelector('span').textContent = `Выберите изображение`;
+            this.$refs.files.parentElement.querySelector('span').textContent = `Выберите pdf (до 2-х файлов)`;
         },
         getDataForFetch() {
             let data = new FormData();
@@ -128,7 +137,6 @@ export default {
 
             event.target.parentElement.querySelector('span').textContent = `Выбрано: ${fileName.join(', ')}`;
         }
-        
     }
 }
 </script>

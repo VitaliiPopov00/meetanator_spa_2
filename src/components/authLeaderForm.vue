@@ -84,7 +84,7 @@
                         }
                     }
 
-                    let response = await fetch(`${localStorage.getItem('homeUrlAPI')}/api/user/login`, requestOptions);
+                    let response = await fetch(`${localStorage.homeUrlAPI}/api/user/login`, requestOptions);
                     let data = await response.json();
 
                     if (response.status > 199 && response.status < 301) {
