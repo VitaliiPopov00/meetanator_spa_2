@@ -11,6 +11,8 @@ use Yii;
  * @property int $meet_id
  * @property string $filename
  * @property string $type
+ *
+ * @property Meet $meet
  */
 class FileMeet extends \yii\db\ActiveRecord
 {
@@ -31,6 +33,7 @@ class FileMeet extends \yii\db\ActiveRecord
             [['meet_id', 'filename', 'type'], 'required'],
             [['meet_id'], 'integer'],
             [['filename', 'type'], 'string', 'max' => 255],
+            [['meet_id'], 'exist', 'skipOnError' => true, 'targetClass' => Meet::class, 'targetAttribute' => ['meet_id' => 'id']],
         ];
     }
 
@@ -41,9 +44,19 @@ class FileMeet extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'meet_id' => 'Meet ID',
-            'filename' => 'Filename',
-            'type' => 'Type',
+            'meet_id' => 'Идентификатор встречи',
+            'filename' => 'Название файла',
+            'type' => 'Тип',
         ];
+    }
+
+    /**
+     * Gets query for [[Meet]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getMeet()
+    {
+        return $this->hasOne(Meet::class, ['id' => 'meet_id']);
     }
 }

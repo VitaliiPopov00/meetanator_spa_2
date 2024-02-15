@@ -9,6 +9,8 @@ use Yii;
  *
  * @property int $id
  * @property string $title
+ *
+ * @property User[] $users
  */
 class Role extends \yii\db\ActiveRecord
 {
@@ -38,7 +40,24 @@ class Role extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'title' => 'Title',
+            'title' => 'Заголовок',
         ];
+    }
+
+    public static function getRoleIDByTitle($title)
+    {
+        if ($role = static::findOne(['title' => $title])) {
+            return $role->id;
+        }
+    }
+
+    /**
+     * Gets query for [[Users]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getUsers()
+    {
+        return $this->hasMany(User::class, ['role_id' => 'id']);
     }
 }

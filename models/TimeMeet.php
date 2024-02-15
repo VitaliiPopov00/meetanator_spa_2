@@ -11,6 +11,9 @@ use Yii;
  * @property int $user_id
  * @property int $meet_id
  * @property string $available
+ *
+ * @property Meet $meet
+ * @property User $user
  */
 class TimeMeet extends \yii\db\ActiveRecord
 {
@@ -31,6 +34,8 @@ class TimeMeet extends \yii\db\ActiveRecord
             [['user_id', 'meet_id', 'available'], 'required'],
             [['user_id', 'meet_id'], 'integer'],
             [['available'], 'string', 'max' => 255],
+            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
+            [['meet_id'], 'exist', 'skipOnError' => true, 'targetClass' => Meet::class, 'targetAttribute' => ['meet_id' => 'id']],
         ];
     }
 
@@ -41,9 +46,29 @@ class TimeMeet extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'user_id' => 'User ID',
-            'meet_id' => 'Meet ID',
-            'available' => 'Available',
+            'user_id' => 'Идентификатор пользователя',
+            'meet_id' => 'Идентификатор встречи',
+            'available' => 'Доступность',
         ];
+    }
+
+    /**
+     * Gets query for [[Meet]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getMeet()
+    {
+        return $this->hasOne(Meet::class, ['id' => 'meet_id']);
+    }
+
+    /**
+     * Gets query for [[User]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getUser()
+    {
+        return $this->hasOne(User::class, ['id' => 'user_id']);
     }
 }

@@ -81,7 +81,14 @@ $config = [
                     'class' => 'yii\rest\UrlRule',
                     'controller' => 'user',
                     'extraPatterns' => [
-                        'GET search' => 'search',
+                        'OPTIONS login' => 'options',
+                        'POST login' => 'login',
+
+                        'OPTIONS logout' => 'options',
+                        'GET logout' => 'logout',
+
+                        'OPTIONS profile' => 'options',
+                        'GET profile' => 'info',
                     ],
                 ]
             ],

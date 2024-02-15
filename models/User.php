@@ -78,13 +78,77 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return [
             'id' => 'ID',
-            'login' => 'Login',
-            'password' => 'Password',
-            'token' => 'Token',
-            'role_id' => 'Role ID',
-            'created_at' => 'Created At',
-            'updated_at' => 'Updated At',
+            'login' => 'Логин',
+            'password' => 'Пароль',
+            'token' => 'Токен',
+            'role_id' => 'Идентификатор роли',
+            'created_at' => 'Создан в',
+            'updated_at' => 'Обновлен в',
         ];
+    }
+
+    public function validateLogin($attribute)
+    {
+        if ($this->password && !$this->hasErrors('password')) {
+            $users = static::findAll([$attribute => $this->$attribute, 'role_id' => Role::getRoleIDByTitle('leader')]);
+            
+            foreach ($users as $user) {
+                if ($user->password) {
+                    return $this->addError($attribute, 'Логин должен быть уникальным');
+                }
+            }
+        }
+    }
+
+    public function setPasswordHash()
+    {
+        return $this->password = Yii::$app->security->generatePasswordHash($this->password);
+    }
+
+    public function validatePassword($password)
+    {
+        return Yii::$app->security->validatePassword($password, $this->password);
+    }
+
+    public function setToken()
+    {
+        return $this->token = Yii::$app->security->generateRandomString();
+    }
+
+    public static function getInfo($userID)
+    {
+        $user = User::findOne($userID);
+
+        return [
+            'login' => $user->login,
+            'created_at' = $user->created_at,
+            'meets' => Meet::getMeetUser($user->id),
+        ];
+    }
+
+    public function getMeets()
+    {
+        return $this->hasMany(Meet::class, ['user_id' => 'id']);
+    }
+
+    /**
+     * Gets query for [[Role]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getRole()
+    {
+        return $this->hasOne(Role::class, ['id' => 'role_id']);
+    }
+
+    /**
+     * Gets query for [[TimeMeets]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getTimeMeets()
+    {
+        return $this->hasMany(TimeMeet::class, ['user_id' => 'id']);
     }
 
     public static function findIdentity($id)
