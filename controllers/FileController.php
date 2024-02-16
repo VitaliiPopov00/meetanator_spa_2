@@ -14,7 +14,7 @@ use app\models\User;
 use Yii;
 
 
-class ImgController extends ActiveController
+class FileController extends ActiveController
 {
     public $modelClass = '';
     public $enableCsrfValidation = false;
@@ -64,12 +64,11 @@ class ImgController extends ActiveController
     public function actionShow($hash, $filename)
     {
         if ($meet = Meet::findOne(['hash' => $hash])) {
-            $imgDB = FileMeet::findOne(['meet_id' => $meet->id, 'filename' => $filename]);
-            $path = Yii::getAlias('@app') . '/upload/' . $meet->hash . '/image/';
+            $fileDB = FileMeet::findOne(['meet_id' => $meet->id, 'filename' => $filename]);
+            $path = Yii::getAlias('@app') . '/upload/' . $meet->hash . '/info/';
 
-            if ($imgDB && file_exists($path . $imgDB->filename)) {
-                header('Content-Type: image/png');
-                return Yii::$app->response->sendFile($path . $imgDB->filename);
+            if ($fileDB && file_exists($path . $fileDB->filename)) {
+                return Yii::$app->response->sendSteamAsFile(fopen($path . $fileDB->filename, 'r'), $fileDB->filename);
             } else {
                 Yii::$app->response->statusCode = 404;
 

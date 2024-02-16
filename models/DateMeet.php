@@ -48,6 +48,28 @@ class DateMeet extends \yii\db\ActiveRecord
         ];
     }
 
+    public static function setDateMeet($meetID, $dates)
+    {
+        foreach ($dates as $date) {
+            $record = new static();
+            $record->meet_id = $meetID;
+            $record->date = $date;
+            $record->save(false);
+        }
+    }
+
+    public static function getDayMeet($meetID)
+    {
+        $result = [];
+        $dates = static::findAll(['meet_id' => $meetID]);
+
+        foreach ($dates as $date) {
+            $result[] = $date->date;
+        }
+
+        return $result;
+    }
+
     /**
      * Gets query for [[Meet]].
      *

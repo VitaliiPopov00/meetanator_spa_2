@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use DateTime;
 use Yii;
 use yii\validators\EmailValidator;
 
@@ -59,7 +60,7 @@ class Meet extends \yii\db\ActiveRecord
             [['dates'], 'validateDate', 'on' => static::SCENARIO_CREATE_MEET],
 
             [['upload_img'], 'image', 'extensions' => 'png, jpg, jped', 'mimeTypes' => 'image/*', 'maxSize' => 2 * 1024 * 1024, 'maxFiles' => 1, 'on' => static::SCENARIO_UPLOAD_FILES],
-            [['upload_files'], 'file', 'extensions' => 'pdf', 'mimeTypes' => 'application/*', 'masSize' => 2 * 1024 * 1024, 'maxFiles' => 2, 'on' => static::SCENARIO_UPLOAD_FILES],
+            [['upload_files'], 'file', 'extensions' => 'pdf', 'mimeTypes' => 'application/*', 'maxSize' => 2 * 1024 * 1024, 'maxFiles' => 2, 'on' => static::SCENARIO_UPLOAD_FILES],
 
             [['emails'], 'validateEmails', 'on' => static::SCENARIO_INVITE],
 
@@ -102,6 +103,19 @@ class Meet extends \yii\db\ActiveRecord
                 }
             } else {    
                 $this->addError('email' . $index, 'Заполните поле');
+            }
+        }
+    }
+
+    public function validateDate($attribute)
+    {
+        foreach ($this->$attribute as $index => $date) {
+            $date = (new DateTime($date))->format('Y-m-d');
+            $now = (new DateTime())->format('Y-m-d');
+            $dateLast30Days = new DateTime($now . ' + 30 days');
+
+            if ($date && ($date < $now || $date > $dateLast30Days)) {
+                $this->addError('date' . $index, 'Дата должна быть минимум сегодняшней и не более 30 дней в будущем');
             }
         }
     }
@@ -208,6 +222,51 @@ class Meet extends \yii\db\ActiveRecord
         }
 
         return $result;
+    }
+
+    public function setHashForMeet()
+    {
+        return $this->hash = Yii::$app->security->generateRandomString();
+    }
+
+    public function setHashForLeaderMeet()
+    {
+        return $this->hash_leader = Yii::$app->security->generateRandomString();
+    }
+
+    public static function getInfo($meetID)
+    {
+        $meet = static::findOne($meetID);
+        $leader = User::findOne($meet->user_id);
+        $info = [
+            'title' => $meet->title,
+            'description' => $meet->description,
+            'dates' => DateMeet::getDayMeet($meet->id),
+            'start' => $meet->start,
+            'end' => $meet->end,
+            'interval' => $meet->interval,
+            'block' => $meet->block,
+            'delete' => $meet->delete,
+            'availables' => TimeMeet::getAllUserAvailable($meet->id),
+            'leader' => [
+                'id' => $leader->id,
+                'login' => $leader->login,
+            ],
+            'img' => '',
+            'files' => [],
+        ];
+
+        if ($img = FileMeet::findOne(['meet_id' => $meet->id, 'type' => 'img'])) {
+            $info['img'] = $img->filename;
+        }
+
+        if ($filesPDF = FileMeet::findAll(['meet_id' => $meet->id, 'type' => 'pdf'])) {
+            foreach ($filesPDF as $filePDF) {
+                $info['files'][] = $filePDF->filename;
+            }
+        }
+
+        return $info;
     }
 
     /**

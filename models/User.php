@@ -121,7 +121,7 @@ class User extends ActiveRecord implements IdentityInterface
 
         return [
             'login' => $user->login,
-            'created_at' = $user->created_at,
+            'created_at' => $user->created_at,
             'meets' => Meet::getMeetUser($user->id),
         ];
     }

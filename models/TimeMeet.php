@@ -52,6 +52,33 @@ class TimeMeet extends \yii\db\ActiveRecord
         ];
     }
 
+    public static function setClearIntervalForUser($userID, $meetID, $start, $end, $countDates)
+    {
+        $countInterval = ((strtotime($end) - strtotime($start)) / 60) / 60;
+        $timeMeet = new static();
+        $timeMeet->user_id = $userID;
+        $timeMeet->meet_id = $meetID;
+        $timeMeet->available = json_encode(array_fill(0, $countDates, array_fill(0, $countInterval, 0)));
+        $timeMeet->save(false);
+    }
+
+    public static function getAllUserAvailable($meetID)
+    {
+        $result = [];
+        $meet = Meet::findOne($meetID);
+        $usersAvailables = static::findAll(['meet_id' => $meetID]);
+
+        foreach ($usersAvailables as $userAvailable) {
+            $user = User::findOne($userAvailable->user_id);
+            $result[$user->login] = [
+                'id' => $user->id,
+                'availables' => json_decode($userAvailable->available),
+            ];
+        }
+
+        return $result;
+    }
+
     /**
      * Gets query for [[Meet]].
      *

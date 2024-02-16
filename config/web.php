@@ -75,6 +75,49 @@ $config = [
             'enableStrictParsing' => true,
             'showScriptName' => false,
             'rules' => [
+                'OPTIONS api/meet' => 'meet/options',
+                'POST api/meet' => 'meet/new',
+
+                'OPTIONS api/user' => 'user/options',
+                'GET api/user' => 'user/info',
+
+                [
+                    'prefix' => 'api',
+                    'pluralize' => false,
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => 'meet',
+                    'extraPatterns' => [
+                        'OPTIONS <hash>' => 'options',
+                        'GET <hash>' => 'info',
+
+                        'OPTIONS <hash>/<hashLeader>' => 'options',
+                        'GET <hash>/<hashLeader>' => 'check-access',
+
+                        'OPTIONS <hash>/login' => 'options',
+                        'POST <hash>/login' => 'login',
+
+                        'OPTIONS <hash>/user/<userID>' => 'options',
+                        'PATCH <hash>/user/<userID>' => 'interval',
+
+                        'OPTIONS <hash>/<hashLeader>' => 'options',
+                        'DELETE <hash>/<hashLeader>' => 'block-meet',
+
+                        'OPTIONS <hash>/<hashLeader>/delete' => 'options',
+                        'DELETE <hash>/<hashLeader>/delete' => 'delete-meet',
+
+                        'OPTIONS <hash>/<hashLeader>/file/<filename>' => 'options',
+                        'DELETE <hash>/<hashLeader>/file/<filename>' => 'delete-file',
+
+                        'OPTIONS <hash>/<hashLeader>/user/<userID>' => 'options',
+                        'DELETE <hash>/<hashLeader>/user/<userID>' => 'delete-user',
+
+                        'OPTIONS <hash>/<hashLeader>/file' => 'options',
+                        'POST <hash>/<hashLeader>/file' => 'update-file',
+
+                        'OPTIONS <hash>/<hashLeader>/invite' => 'options',
+                        'POST <hash>/<hashLeader>/invite' => 'invite',
+                    ],
+                ],
                 [
                     'prefix' => 'api',
                     'pluralize' => false,
@@ -90,7 +133,27 @@ $config = [
                         'OPTIONS profile' => 'options',
                         'GET profile' => 'info',
                     ],
-                ]
+                ],
+                [
+                    'prefix' => 'api',
+                    'pluralize' => false,
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => 'img',
+                    'extraPatterns' => [
+                        'OPTIONS <hash>/<filename>' => 'options',
+                        'GET <hash>/<filename>' => 'show',
+                    ],
+                ],
+                [
+                    'prefix' => 'api',
+                    'pluralize' => false,
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => 'file',
+                    'extraPatterns' => [
+                        'OPTIONS <hash>/<filename>' => 'options',
+                        'GET <hash>/<filename>' => 'show',
+                    ],
+                ],
             ],
         ],
     ],

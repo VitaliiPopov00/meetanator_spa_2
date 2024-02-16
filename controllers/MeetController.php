@@ -5,13 +5,18 @@ namespace app\controllers;
 use yii\filters\auth\HttpBearerAuth;
 use yii\rest\ActiveController;
 use yii\web\UploadedFile;
-
+use app\models\DateMeet;
+use app\models\FileMeet;
+use app\models\Meet;
+use app\models\Role;
+use app\models\TimeMeet;
+use app\models\User;
+use Yii;
 
 class MeetController extends ActiveController
 {
     public $modelClass = '';
     public $enableCsrfValidation = false;
-
 
     public function behaviors()
     {
@@ -24,24 +29,20 @@ class MeetController extends ActiveController
             'class' => \yii\filters\Cors::class,
             'cors' => [
                 'Origin' => [
-                    (isset($_SERVER['HTTP_ORIGIN'])
+                    (
+                        isset($_SERVER['HTTP_ORIGIN'])
                         ? $_SERVER['HTTP_ORIGIN']
                         : 'http://' . $_SERVER['REMOTE_ADDR']
                     ),
                 ],
-                'Access-Control-Request-Method' => ['content-type', 'Authorization'],
-                'Access-Control-Request-Headers' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+                'Access-Control-Request-Headers' => ['content-type', 'Authorization'],
+                'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
             ],
-            'actions' => [
-                'login' => [
-                    'Access-Control-Allow-Credentials' => true,
-                ]
-            ]
         ];
 
         $auth = [
             'class' => HttpBearerAuth::class,
-            'only' => [],
+            'only' => [''],
         ];
         
         $behaviors['authenticator'] = $auth;
@@ -71,37 +72,36 @@ class MeetController extends ActiveController
         $user->validate();
 
         if (!$meet->hasErrors() && !$user->hasErrors()) {
-            if ($user->password) {
-                $user->role_id = Role::getRoleIDByTitle('leader');
-                $user->setPasswordHash();
-                $user->save(false);
-            } else {
-                $users = User::findAll(['login' => $user->login, 'role_id' => Role::getRoleIDByTitle('leader')]);
-                $user = null;
+            if ($user->password) { // если пароль был передан (логин 100% уникален среди зарегистрированных пользователей, т.к прошла валидация у пользователя на уникальность логина, при присутствии пароля)
+                $user->role_id = Role::getRoleIDByTitle('leader'); // создаем нового зарегистрированного пользтователя
+                $user->setPasswordHash();                          // создаем нового зарегистрированного пользтователя 
+                $user->save(false);                                // создаем нового зарегистрированного пользтователя
+            } else { // если пароль не был передан, то пытаемся найти зарегистрированного пользователя с таким логином либо создать нового незарегистрированного
+                $users = User::findAll(['login' => $user->login, 'role_id' => Role::getRoleIDByTitle('leader')]); // получаем всех лидеров из БД с таким логином
+                $user = null; // создаем "пустого" пользователя, в которого будут прогружены данные зарегистрированного пользователя, либо будет создан новый незарегистрированный
 
                 foreach ($users as $userFromDB) {
-                    if ($userFromDB->password) {
-                        $user = $userFromDB;
+                    if ($userFromDB->password) { // ищем пользователя, который будет зарегистрирован
+                        $user = $userFromDB; // прогружаем данные в "пустышку"
                         break;
                     }
                 }
 
-                if (!$user) {
-                    $user = new User();
-                    $user->role_id = Role::getRoleIDByTitle('leader');
-                    $user->load(Yii::$app->request->post(), '');
-                    $user->save(false);
+                if (!$user) { // если с переданным логином не сущетсвует зарегстрированного пользователя, то создаем нового незарегистрированного
+                    $user = new User();                                // создаем нового незарегистрированного пользтователя
+                    $user->role_id = Role::getRoleIDByTitle('leader'); // создаем нового незарегистрированного пользтователя
+                    $user->load(Yii::$app->request->post(), '');       // создаем нового незарегистрированного пользтователя
+                    $user->save(false);                                // создаем нового незарегистрированного пользтователя
                 }
             }
 
-            $meet->user_id = $user->id;
-            $meet->setHashForMeet();
-            $meet->setHashForLeaderMeet();
+            $meet->user_id = $user->id;    // загружаем во встречу необходимые данные
+            $meet->setHashForMeet();       // загружаем во встречу необходимые данные
+            $meet->setHashForLeaderMeet(); // загружаем во встречу необходимые данные
     
             if ($meet->save()) {
-                $dateMeet = new DateMeet();
-                $dateMeet->setDateMeet($meet->id, $meet->dates);
-                TimeMeet::setClearIntervalForUser($user->id, $meet->id, $meet->start, $meet->end, count($meet->dates));
+                DateMeet::setDateMeet($meet->id, $meet->dates); // сохранение в БД переданных дат
+                TimeMeet::setClearIntervalForUser($user->id, $meet->id, $meet->start, $meet->end, count($meet->dates)); // создание "пустых" интервалов в БД для лидера
     
                 Yii::$app->response->statusCode = 200;
     
@@ -115,7 +115,7 @@ class MeetController extends ActiveController
                             'id' => $user->id,
                         ]
                     ]
-                ])
+                ]);
             }
         } else {
             Yii::$app->response->statusCode = 422;
@@ -135,30 +135,39 @@ class MeetController extends ActiveController
         if (($meet = Meet::findOne(['hash' => $hash]))) {
             if (!$meet->block) {
                 $user = new User();
-
+                
                 if ($user->load(Yii::$app->request->post(), '') && $user->validate()) {
-                    if (($userInMeet = $meet->userInMeet($user->login))) {
-                        if ($userInMeet->password) {
-                            if ($userInMeet->validatePassword($user->password)) {
+                    if (($userInMeet = $meet->userInMeet($user->login))) { // если пользователь с переданным логином уже есть во встрече
+                        if ($userInMeet->password) { // если пользователь во встрече был зарегистрирован, то проводим авторизацию
+                            if ($user->password && $userInMeet->validatePassword($user->password)) {
                                 $result = [
-                                    'data' [
+                                    'data' => [
                                         'user' => [
                                             'login' => $userInMeet->login,
-                                            'id' => $userInMeet->implode,
-                                            'isLeader' => $userInMeet->getRole()->all()[0]->title == 'leader' ? true : false,
+                                            'id' => $userInMeet->id,
+                                            'isLeader' => ($userInMeet->getRole()->one()->title == 'leader' ? true : false),
                                         ],
                                     ],
                                 ];
 
-                                if ($result['data']['user']['isLeader']) {
+                                if ($result['data']['user']['isLeader']) { // если во встрече авторизовался лидер, то передаем еще и хэш лидера встречи (чтобы был редирект на страницу для лидера)
                                     $result['data']['meet']['hashLeader'] = $meet->hash_leader;
                                 }
 
                                 Yii::$app->response->statusCode = 200;
 
                                 return $this->asJson($result);
+                            } else {
+                                Yii::$app->response->statusCode = 401;
+
+                                return $this->asJson([
+                                    'error' => [
+                                        'code' => 401,
+                                        'message' => 'Unauthorized',
+                                    ],
+                                ]);
                             }
-                        } else {
+                        } else { // если пользователь во встрече не регистрировался (дальнейший вход для изменений запрещен)
                             Yii::$app->response->statusCode = 403;
 
                             return $this->asJson([
@@ -169,14 +178,14 @@ class MeetController extends ActiveController
                             ]);
                         }
                     } else {
-                        $user->role_id = Role::getRoleIDByTitle('participant');
+                        $user->role_id = Role::getRoleIDByTitle('participant'); // если пользователя с таким логином нет во встрече, то создаем нового
 
                         if ($user->password) {
                             $user->setPasswordHash();
                         }
 
                         $user->save(false);
-                        TimeMeet::setClearIntervalForUser($user->id, $meet->id, $meet->start, $meet->end, count($meet->dates));
+                        TimeMeet::setClearIntervalForUser($user->id, $meet->id, $meet->start, $meet->end, count(DateMeet::getDayMeet($meet->id))); // создаем "пустые" интервалы для нового пользователя
                         
                         Yii::$app->response->statusCode = 200;
 
@@ -185,7 +194,7 @@ class MeetController extends ActiveController
                                 'user' => [
                                     'login' => $user->login,
                                     'id' => $user->id,
-                                    'isLeader' => $user->getRole()->all()[0]->title == 'leader' ? true : false,
+                                    'isLeader' => $user->getRole()->one()->title == 'leader' ? true : false,
                                 ],
                             ],
                         ]);
@@ -197,6 +206,7 @@ class MeetController extends ActiveController
                         'error' => [
                             'code' => 422,
                             'message' => 'Validation error',
+                            'errors' => $user->errors,
                         ],
                     ]);
                 }
@@ -229,14 +239,9 @@ class MeetController extends ActiveController
                 if ($user = User::findOne($userID)) {
                     $availables = Yii::$app->request->post();
 
-                    if (!($record = TimeMeet::findOne(['meet_id' => $meet->id, 'user_id' => $user->id]))) {
-                        $record = new TimeMeet();
-                        $record->user_id = $user->id;
-                        $record->meet_id = $meet->id;
-                    }
-
-                    $record->availables = json_encode($availables);
-                    $record->save(false);
+                    $record = TimeMeet::findOne(['meet_id' => $meet->id, 'user_id' => $user->id]); // изменяем существующие интервалы
+                    $record->available = json_encode($availables);                                 // изменяем существующие интервалы
+                    $record->save(false);                                                          // изменяем существующие интервалы
 
                     Yii::$app->response->statusCode = 204;
                 } else {
@@ -287,7 +292,7 @@ class MeetController extends ActiveController
                             'code' => 409,
                             'message' => 'Встреча уже заблокирована'
                         ]
-                    ])
+                    ]);
                 }
             } else {
                 Yii::$app->response->statusCode = 403;
@@ -297,7 +302,7 @@ class MeetController extends ActiveController
                         'code' => 403,
                         'message' => 'Недоступно для вас',
                     ]
-                ])
+                ]);
             }
         } else {
             Yii::$app->response->statusCode = 404;
@@ -319,7 +324,7 @@ class MeetController extends ActiveController
 
                 return $this->asJson([
                     'data' => [
-                        'meet' => $meet->getInfo(),
+                        'meet' => Meet::getInfo($meet->id),
                     ],
                 ]);
             } else {
@@ -417,6 +422,7 @@ class MeetController extends ActiveController
                         'error' => [
                             'code' => 422,
                             'message' => 'Validation error',
+                            'errors' => $meet->errors,
                         ],
                     ]);
                 }

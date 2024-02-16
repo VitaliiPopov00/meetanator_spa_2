@@ -4,6 +4,13 @@ namespace app\controllers;
 
 use yii\filters\auth\HttpBearerAuth;
 use yii\rest\ActiveController;
+use app\models\DateMeet;
+use app\models\FileMeet;
+use app\models\Meet;
+use app\models\Role;
+use app\models\TimeMeet;
+use app\models\User;
+use Yii;
 
 class UserController extends ActiveController
 {
@@ -22,19 +29,15 @@ class UserController extends ActiveController
             'class' => \yii\filters\Cors::class,
             'cors' => [
                 'Origin' => [
-                    (isset($_SERVER['HTTP_ORIGIN'])
+                    (
+                        isset($_SERVER['HTTP_ORIGIN'])
                         ? $_SERVER['HTTP_ORIGIN']
                         : 'http://' . $_SERVER['REMOTE_ADDR']
                     ),
                 ],
-                'Access-Control-Request-Method' => ['content-type', 'Authorization'],
-                'Access-Control-Request-Headers' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+                'Access-Control-Request-Headers' => ['content-type', 'Authorization'],
+                'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
             ],
-            'actions' => [
-                'login' => [
-                    'Access-Control-Allow-Credentials' => true,
-                ]
-            ]
         ];
 
         $auth = [
@@ -62,18 +65,18 @@ class UserController extends ActiveController
         $user->scenario = User::SCENARIO_LOGIN;
 
         if ($user->load(Yii::$app->request->post(), '') && $user->validate()) {
-            $password = $user->password;
-            $users = User::findAll(['login' => $user->login, 'role_id' => Role::getRoleIDByTitle('leader')]);
-            $user = null;
+            $password = $user->password; // запоминаем переданный пароль от клиента
+            $users = User::findAll(['login' => $user->login, 'role_id' => Role::getRoleIDByTitle('leader')]); // находим всех лидеров в БД (незарегистрированные и зарегистрированный)
+            $user = null; // создаем "пустого" пользователя, в которого в дальнейшем будут прогружены данные зарегистрированного пользователя (если найдется)
 
             foreach ($users as $userFromDB) {
-                if ($userFromDB->password) {
-                    $user = $userFromDB;
+                if ($userFromDB->password) { // ищем пользователя, который будет зарегистрирован
+                    $user = $userFromDB; // прогружаем данные в "пустышку"
                     break;
                 }
             }
 
-            if ($user) {
+            if ($user) { // если нашли зарегистрированного пользователя с таким логином, то проводим авторизацию
                 if ($user->validatePassword($password)) {
                     $user->setToken();
                     $user->save(false);
@@ -95,7 +98,7 @@ class UserController extends ActiveController
                         ],
                     ]);
                 }
-            } else {
+            } else { // не нашли зарегистрированного пользователя с таким логином
                 Yii::$app->response->statusCode = 401;
 
                 return $this->asJson([
@@ -131,7 +134,7 @@ class UserController extends ActiveController
 
     public function actionLogout()
     {
-        $user = User::findOne(Yii::$app->user->identity->id);
+        $user = Yii::$app->user->identity;
         $user->token = null;
         $user->save(false);
 
