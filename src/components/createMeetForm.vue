@@ -80,8 +80,8 @@
                                 :min="getDate(Date.now())"
                                 :max="getDate(getFutureDate(Date.now(), 30))"
                                 :class="{ 'is-invalid': error[`date${index}`] }"
-                                :id="date${index}"
-                                :name="date${index}" 
+                                :id="date[index]"
+                                :name="date[index]" 
                                 class="form-control" 
                                 type="date" 
                             />
@@ -238,7 +238,7 @@ export default {
                 let data = await response.json();
 
                 if (response.status > 199 && response.status < 301) {
-                    this.$router.push(`/${data.data.meet.hash}/${data.data.meet.leaderHash}`);                    
+                    this.$router.push(`/${data.data.meet.hash}/${data.data.meet.hashLeader}`);                    
                 } else {
                     throw Error(JSON.stringify(data.error));
                 }

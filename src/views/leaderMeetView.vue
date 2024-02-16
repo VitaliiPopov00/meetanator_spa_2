@@ -137,11 +137,11 @@ export default {
                 }
 
                 let response = await fetch(`${localStorage.getItem('homeUrlAPI')}/api/meet/${this.$route.params.hash}/${this.$route.params.hashLeader}`, requestOptions);
-                let data = await response.json();
-
+                
                 if (response.status > 199 && response.status < 301) {
                     this.fetchGetMeetInfo();
                 } else {
+                    let data = await response.json();
                     throw Error(JSON.stringify(data.error));
                 }
             } catch (e) {

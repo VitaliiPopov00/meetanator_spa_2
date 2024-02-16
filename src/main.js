@@ -4,7 +4,7 @@ import router from './router';
 import components from '@/components';
 
 if (!localStorage.getItem('homeUrlAPI')) {
-    localStorage.setItem('homeUrlAPI', 'http://krsmcfz-m2.wsr.ru');
+    localStorage.setItem('homeUrlAPI', 'http://krsmcfz-m3.wsr.ru');
 }
 
 const app = createApp(App);

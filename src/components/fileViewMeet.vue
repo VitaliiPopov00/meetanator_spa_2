@@ -77,11 +77,11 @@ export default {
                 }
 
                 let response = await fetch(`${localStorage.homeUrlAPI}/api/meet/${this.$route.params.hash}/${this.$route.params.hashLeader}/file/${filename}`, requestOptions);
-                let data = await response.json();
-
+                
                 if (response.status > 199 && response.status < 300) {
                     this.$emit('update');
                 } else {
+                    let data = await response.json();
                     throw Error(JSON.stringify(data.error));
                 }
             } catch (e) {

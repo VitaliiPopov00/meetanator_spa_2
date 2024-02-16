@@ -73,7 +73,7 @@
 
                     if (response.status > 199 && response.status < 300) {
                         if (data.data.user.isLeader) {
-                            this.$router.push(`/${this.$route.params.hash}/${data.data.meet.leaderHash}`);
+                            this.$router.push(`/${this.$route.params.hash}/${data.data.meet.hashLeader}`);
                         } else {
                             this.$router.push(`/${this.$route.params.hash}/user/${data.data.user.id}`);
                         }
